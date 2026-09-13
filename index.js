@@ -9,25 +9,14 @@ const builder = new addonBuilder({
     version: "1.0.0",
     name: "HH3D",
     description: "Chinese 3D Animation addon for Stremio",
-    resources: [
-        "catalog",
-        "meta",
-        "stream"
-    ],
-    types: [
-        "series"
-    ],
+    resources: ["catalog", "meta", "stream"],
+    types: ["series"],
     catalogs: [
         {
             type: "series",
             id: "hh3d",
             name: "HH3D",
-            extra: [
-                {
-                    name: "search",
-                    isRequired: false
-                }
-            ]
+            extra: [{ name: "search", isRequired: false }]
         }
     ]
 });
@@ -36,12 +25,11 @@ async function getMovies() {
     const { data: html } = await axios.get(BASE_URL, {
         headers: {
             "User-Agent":
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36",
-        },
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36"
+        }
     });
 
     const $ = cheerio.load(html);
-
     const movies = [];
     const seen = new Set();
 
@@ -77,8 +65,7 @@ async function getMovies() {
             poster = new URL(poster, BASE_URL).href;
         }
 
-        const slug = new URL(url).pathname
-            .replace(/^\/|\/$/g, "");
+        const slug = new URL(url).pathname.replace(/^\/|\/$/g, "");
 
         movies.push({
             id: `hh3d:${slug}`,
@@ -121,8 +108,8 @@ builder.defineMetaHandler(async ({ type, id }) => {
     const { data: html } = await axios.get(movieUrl, {
         headers: {
             "User-Agent":
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36",
-        },
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36"
+        }
     });
 
     const $ = cheerio.load(html);
@@ -137,11 +124,7 @@ builder.defineMetaHandler(async ({ type, id }) => {
 
     $("a.episode-item[href*='/tap-']").each((_, el) => {
         const href = $(el).attr("href");
-
-        const title = $(el)
-            .find(".episode-number")
-            .text()
-            .trim();
+        const title = $(el).find(".episode-number").text().trim();
 
         if (!href) return;
 
@@ -187,12 +170,15 @@ builder.defineStreamHandler(async ({ type, id }) => {
     const episodeUrl =
         `${BASE_URL}/${slug}/tap-${String(episode).padStart(2, "0")}/`;
 
+    console.log("STREAM REQUEST:");
+    console.log("Episode URL:", episodeUrl);
+
     try {
         const { data: html } = await axios.get(episodeUrl, {
             headers: {
                 "User-Agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36",
-            },
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36"
+            }
         });
 
         const match = html.match(
@@ -200,10 +186,13 @@ builder.defineStreamHandler(async ({ type, id }) => {
         );
 
         if (!match) {
+            console.log("ERROR: all_sources not found");
             return { streams: [] };
         }
 
         const sources = JSON.parse(match[1]);
+
+        console.log("ALL SOURCES:", sources);
 
         if (!sources.length) {
             return { streams: [] };
@@ -211,7 +200,16 @@ builder.defineStreamHandler(async ({ type, id }) => {
 
         const masterUrl = sources[0];
 
-        const { data: master } = await axios.get(masterUrl);
+        console.log("MASTER URL:", masterUrl);
+
+        const { data: master } = await axios.get(masterUrl, {
+            headers: {
+                "User-Agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36"
+            }
+        });
+
+        console.log("MASTER PLAYLIST OK");
 
         const lines = master.split(/\r?\n/);
 
@@ -228,6 +226,7 @@ builder.defineStreamHandler(async ({ type, id }) => {
         }
 
         if (!stream1080) {
+            console.log("1080P not found, using master");
             return {
                 streams: [
                     {
@@ -241,6 +240,8 @@ builder.defineStreamHandler(async ({ type, id }) => {
 
         const finalUrl = new URL(stream1080, masterUrl).href;
 
+        console.log("FINAL 1080P URL:", finalUrl);
+
         return {
             streams: [
                 {
@@ -253,6 +254,15 @@ builder.defineStreamHandler(async ({ type, id }) => {
 
     } catch (error) {
         console.error("STREAM ERROR:", error.message);
+
+        if (error.config && error.config.url) {
+            console.error("FAILED URL:", error.config.url);
+        }
+
+        if (error.response) {
+            console.error("STATUS:", error.response.status);
+        }
+
         return { streams: [] };
     }
 });
