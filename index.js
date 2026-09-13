@@ -32,10 +32,6 @@ const builder = new addonBuilder({
     ]
 });
 
-// =========================
-// GET MOVIES
-// =========================
-
 async function getMovies() {
     const { data: html } = await axios.get(BASE_URL, {
         headers: {
@@ -51,7 +47,6 @@ async function getMovies() {
 
     $(".halim-trending-card").each((_, el) => {
         const link = $(el).find("a.halim-trending-link").first();
-
         const href = link.attr("href");
 
         const name = $(el)
@@ -98,10 +93,6 @@ async function getMovies() {
     return movies;
 }
 
-// =========================
-// CATALOG
-// =========================
-
 builder.defineCatalogHandler(async ({ type, id }) => {
     if (type !== "series" || id !== "hh3d") {
         return { metas: [] };
@@ -118,10 +109,6 @@ builder.defineCatalogHandler(async ({ type, id }) => {
         }))
     };
 });
-
-// =========================
-// META + EPISODES
-// =========================
 
 builder.defineMetaHandler(async ({ type, id }) => {
     if (type !== "series" || !id.startsWith("hh3d:")) {
@@ -168,8 +155,7 @@ builder.defineMetaHandler(async ({ type, id }) => {
             id: `hh3d:${slug}:${episode}`,
             title: title || `Tập ${episode}`,
             season: 1,
-            episode,
-            released: undefined
+            episode
         });
     });
 
@@ -183,10 +169,6 @@ builder.defineMetaHandler(async ({ type, id }) => {
         }
     };
 });
-
-// =========================
-// STREAM
-// =========================
 
 builder.defineStreamHandler(async ({ type, id }) => {
     if (type !== "series" || !id.startsWith("hh3d:")) {
@@ -275,14 +257,10 @@ builder.defineStreamHandler(async ({ type, id }) => {
     }
 });
 
-// =========================
-// START SERVER
-// =========================
-
-const PORT = 7000;
+const PORT = process.env.PORT || 7000;
 
 serveHTTP(builder.getInterface(), {
     port: PORT
 });
 
-console.log(`HH3D addon running at http://127.0.0.1:${PORT}/manifest.json`);
+console.log(`HH3D addon running on port ${PORT}`);
