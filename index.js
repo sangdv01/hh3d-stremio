@@ -202,43 +202,7 @@ builder.defineStreamHandler(async ({ type, id }) => {
 
         console.log("MASTER URL:", masterUrl);
 
-        const { data: master } = await axios.get(masterUrl, {
-            headers: {
-                "User-Agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36"
-            }
-        });
-
-        console.log("MASTER PLAYLIST OK");
-
-        const lines = master.split(/\r?\n/);
-
-        let stream1080 = null;
-
-        for (let i = 0; i < lines.length; i++) {
-            if (
-                lines[i].includes("BANDWIDTH=3500000") &&
-                lines[i].includes("RESOLUTION=1920x816")
-            ) {
-                stream1080 = lines[i + 1];
-                break;
-            }
-        }
-
-        if (!stream1080) {
-            console.log("1080P not found, using master");
-            return {
-                streams: [
-                    {
-                        name: "HH3D",
-                        title: "Original",
-                        url: masterUrl
-                    }
-                ]
-            };
-        }
-
-        const finalUrl = new URL(stream1080, masterUrl).href;
+        const finalUrl = masterUrl;
 
         console.log("FINAL 1080P URL:", finalUrl);
 
@@ -274,3 +238,4 @@ serveHTTP(builder.getInterface(), {
 });
 
 console.log(`HH3D addon running on port ${PORT}`);
+
