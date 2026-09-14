@@ -1,4 +1,4 @@
-﻿const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
+const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 const axios = require("axios");
 const cheerio = require("cheerio");
 
@@ -141,7 +141,7 @@ builder.defineMetaHandler(async ({ type, id }) => {
             episode
         });
     });
-
+    videos.reverse();
     return {
         meta: {
             id,
