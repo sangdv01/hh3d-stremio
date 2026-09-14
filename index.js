@@ -141,7 +141,7 @@ builder.defineMetaHandler(async ({ type, id }) => {
             episode
         });
     });
-    videos.reverse();
+    videos.sort((a, b) => b.episode - a.episode);
     return {
         meta: {
             id,
